@@ -116,17 +116,23 @@ namespace PollyApp
                 Console.WriteLine($"Después de los intentos, sigue fallando ({e.Message})");
             }
 
-            var politicaWaitAndRetryStringWithFallback = Policy<string>
+            var politicaWithFallback = Policy<string>
                 .Handle<Exception>()
                 .Fallback("Valor de Fallback");
 
             Console.WriteLine("\n== Reintentar esperando un valor de fallback ==");
-
-            intentos = 0;
-            var resultado2 = politicaWaitAndRetryStringWithFallback.Execute(LanzaExcepcionConCadena);
+            
+            var resultado2 = politicaWithFallback.Execute(LanzaExcepcionConCadena);
             Console.WriteLine($"Resultado {resultado2}");
 
             #endregion
+
+            var mixedPolicy = Policy.Wrap(politicaWaitAndRetryString, politicaWithFallback);
+
+            Console.WriteLine("\n== Polizas mezcladas ==");
+
+            var resultado3 = mixedPolicy.Execute(LanzaExcepcionConCadena);
+            Console.WriteLine($"Resultado {resultado3}");
 
             Console.WriteLine("Terminado");
             Console.Read();
@@ -152,17 +158,9 @@ namespace PollyApp
             throw new DivideByZeroException();
         }
 
-
-        static int intentos = 0;
-
         static string LanzaExcepcionConCadena()
         {
-            if (intentos < 3)
-            {
-                intentos++;
-                throw new Exception();
-            }
-            return "Hola";
+            throw new Exception();
         }
     }
 }
